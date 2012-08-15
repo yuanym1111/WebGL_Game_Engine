@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+
+<!-- ENGINE ************************************************************************************ --> 
+
+
+
+<script type="text/javascript">
+var rootPath = "";
+</script>
+<script type="text/javascript" src="utility.js"></script>
+<script type="text/javascript" src="modeldemo_setup.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+<link rel="stylesheet" type="text/css" href="demo.css" title="Style" />
+
+</head>
+
+<!-- AND THE REST ****************************************************************************** -->
+
+<body onLoad="demo();">
+
+<div class="content">
+<p class="sge">WebGL Graphic Engin</p>
+<h1>WebGL &ndash; Model</h1>
+
+<p id="webgl-error" class="webgl-error"></p>
+<p id="webgl-loading" class="webgl-loading">Loading demo... <span id="progress-current">???</span> / <span id="progress-total">???</span></p>
+<p id="webgl-init" class="webgl-init">Initializing...</p>
+
+<table id="webgl-content" class="webgl-content">
+<tr><td><canvas id="webgl-canvas" width="1024" height="512" class="webgl-canvas"></canvas></td></tr>
+<tr><td><table id="webgl-controls" class="webgl-controls"></table></td></tr>
+</table>
+
+
+<table id="webgl-controls" class="webgl-controls">
+<tbody><tr><td>Wall opacity<input type="range" min="0" max="100" value="100" id="webgl-transparency"></td></tr>
+<tr><td>(<span id="pos_x">-1</span>, <span id="pos_y">-1</span>)
+<br>
+Picked id <span id="picked_obj">0</span></td></tr>
+<tr><td><canvas id="textureCanvas" width="256" height="256" class="webgl-canvas"></canvas></td></tr>
+</tbody></table>
+
+<table id="webgl-diagnostics" class="webgl-diagnostics">
+<tr><td><b><span id="fps">?</span></b> fps</td></tr>
+</table>
+
+</div>
+
+</body>
+
+</html>
+
