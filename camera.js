@@ -137,7 +137,7 @@ FPSCamera.prototype.constructor = FPSCamera;
 
 function FPSCamera() {
 	Camera.call(this);
-	this.mSpeed = 2.0;
+	this.mSpeed = 20.0;
 };
 
 //Call this function first to build the mLookW, mRightW, mUpW
@@ -197,10 +197,10 @@ FPSCamera.prototype.updateOrientation = function(keycode,pitch,yAngle,time){
 	if(keycode == 8)
 		debugPitch = -0.003;
 	
-	if(pitch>0.005) pitch = 0.05;
-    if(pitch<-0.005) pitch = -0.05;
-    if(yAngle>0.001) yAngle = 0.01;
-    if(yAngle<-0.001) yAngle = -0.01;
+	if(pitch>0.05) pitch = 0.05;
+    if(pitch<-0.05) pitch = -0.05;
+    if(yAngle>0.01) yAngle = 0.01;
+    if(yAngle<-0.01) yAngle = -0.01;
     
     dir = dir.toUnitVector();
     var newPos = $V([0.0,0.0,0.0]);

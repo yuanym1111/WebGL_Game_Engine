@@ -49,6 +49,7 @@ RenderEntity.prototype.setMatrixUniforms = function(isPick)
   if (!this.transformSource.pMatrix) throw Error("Invalid PROJECTION matrix");
 
   this.mvMatrix = this.transformSource.vMatrix.x(this.mMatrix);
+  this.mvMatrixInv = this.mvMatrix.inverse();
   if (!this.mvMatrix) throw Error("Invalid MODELVIEW matrix");
 
   if (this.shaderProgramActive.pMatrixUniform)
@@ -78,7 +79,6 @@ RenderEntity.prototype.setMatrixUniforms = function(isPick)
 
   if (this.shaderProgramActive.mvMatrixInvUniform)
   {
-    this.mvMatrixInv = this.mvMatrix.inverse();
     if (!this.mvMatrixInv) this.mvMatrixInv = identity(); //throw Error("Invalid inverse MODELVIEW matrix");
     this.mvMatrixInv.flattenInto(this.acc);
     gl.uniformMatrix4fv(this.shaderProgramActive.mvMatrixInvUniform, false, this.acc);
@@ -112,9 +112,16 @@ function Renderable(mesh, transformSource, name)
 {
   RenderEntity.call(this,transformSource,name);		
   this.mesh = mesh;
-  this.texture1 = null;
-  this.texture2 = null;
-
+  if(typeof name === "undefined" || name.indexOf('heightmap') == -1){
+    this.texture1 = null;
+    this.texture2 = null;
+  }else{
+    this.texture1 = mesh.texture1 ? mesh.texture1 : null;
+    this.texture2 = mesh.texture2 ? mesh.texture2 : null;
+    this.texture3 = mesh.texture3 ? mesh.texture3 : null;
+    this.texture4 = mesh.texture4 ? mesh.texture4 : null;
+    this.texture5 = mesh.texture5 ? mesh.texture5 : null;
+  }
   this.mMatrix = mesh ? mesh.worldMatrix : Matrix.I(4);
 //  this.mvMatrix = Matrix.I(4);
 //  this.mvMatrixInv = Matrix.I(4);
@@ -124,6 +131,21 @@ function Renderable(mesh, transformSource, name)
 //  this.name = name;
 
   this.acc = new Float32Array(16);
+}
+
+Renderable.prototype.getBoundingBox = function(){
+	
+	if(!this.mesh.raypickable){
+		return;
+	}
+	
+	this.bBox = new AABBBox();
+	
+	if(!this.mesh.vertexBuffer){
+		return;
+	}
+	
+	
 }
 
 Renderable.prototype.shallowCopy = function(name)
@@ -139,32 +161,7 @@ Renderable.prototype.shallowCopy = function(name)
   
   return r;
 }
-/*
-Renderable.prototype.resetTransform = function()
-{
-  this.mMatrix = Matrix.I(4);
-}
 
-Renderable.prototype.transform = function(matrix)
-{
-  this.mMatrix = this.mMatrix.x(matrix);
-}
-
-Renderable.prototype.translate = function(v)
-{
-  this.mMatrix = this.mMatrix.x(translate(v));
-}
-
-Renderable.prototype.scale = function(v)
-{
-  this.mMatrix = this.mMatrix.x(scale(v));
-}
-
-Renderable.prototype.rotate = function(deg, v)
-{
-  this.mMatrix = this.mMatrix.x(rotate(deg, v));
-}
-*/
 Renderable.prototype.render = function(isPick)
 {
   if (!this.mesh) return;
@@ -333,7 +330,7 @@ function ModelRenderable(model, transformSource, name)
   this.acc = new Float32Array(16);
 }
 
-ModelRenderable.prototype.render = function(viewMat, projectionMat, isPick){
+ModelRenderable.prototype.render = function(isPick){
 	
 	  if (!this.model) return;
 	  if (!this.model.indexBuffer) return;
@@ -437,6 +434,141 @@ ModelRenderable.prototype.render = function(viewMat, projectionMat, isPick){
 	  }
      
 };
+
+ModelRenderable.prototype.animRender = function(isPick){
+	
+	  if (!this.model) return;
+	  if (!this.model.indexBuffer) return;
+	  if (!this.model.complete) { return; }
+	  if (isPick)
+	  {
+	    if (!this.shaderProgramPick) return;
+	    this.shaderProgramActive = this.shaderProgramPick;
+	  }
+	  else
+	  {  
+	    if (!this.shaderProgram) return;
+	    this.shaderProgramActive = this.shaderProgram;
+	  }
+
+	  gl.useProgram(this.shaderProgramActive);
+	  //All model information is bounded at vertexBuffer
+	  gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	  
+	  for (var i=0; i<maxVertexAttribs; i++)
+	  {
+	    gl.disableVertexAttribArray(i);
+	  }
+    //Model vertex information
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.vertexPositionAttribute != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.vertexPositionAttribute, this.model.vertexBuffer.vertexItemSize, gl.FLOAT, false, this.model.vertexStride, 0);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.vertexPositionAttribute);
+	  }
+    //Model normal information
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.vertexNormalAttribute != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.vertexNormalAttribute, this.model.vertexBuffer.normalItemSize, gl.FLOAT, true, this.model.vertexStride, 20);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.vertexNormalAttribute);
+	  }
+
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.vertexColorAttribute != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.vertexColorAttribute, this.model.vertexBuffer.colorItemSize, gl.FLOAT, false, this.model.vertexStride, 12);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.vertexColorAttribute);
+	  }
+
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.textureCoordAttribute != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.textureCoordAttribute, this.model.vertexBuffer.textureItemSize, gl.FLOAT, false, this.model.vertexStride, 12);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.textureCoordAttribute);
+	  } 
+
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.textureCoord3Attribute != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.textureCoord3Attribute, this.model.vertexBuffer.textureCoord3ItemSize, gl.FLOAT, false, this.model.vertexStride, 12);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.textureCoord3Attribute);
+	  } 
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.weights != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.weights, 3, gl.FLOAT, false, this.model.vertexStride, 48);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.weights);
+	  }
+	  if ((this.model.vertexBuffer) && (this.shaderProgramActive.bones != -1))
+	  {
+//	    gl.bindBuffer(gl.ARRAY_BUFFER, this.model.vertexBuffer);
+	    gl.vertexAttribPointer(this.shaderProgramActive.bones, 3, gl.FLOAT, false, this.model.vertexStride, 60);
+	    gl.enableVertexAttribArray(this.shaderProgramActive.bones);
+	  }
+
+	  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.model.indexBuffer);
+
+	  this.setMatrixUniforms(isPick);
+
+	  if (this.isAdditive)
+	  {
+	    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	    gl.enable(gl.BLEND);
+	    gl.depthMask(false);
+	  }
+
+	  if (this.model.partialRender)
+	  {
+	    gl.drawElements(gl.TRIANGLES, this.model.partialRenderSize, gl.UNSIGNED_SHORT, 0);
+	  }
+	  else
+	  {
+		  var i, j, k,
+	        mesh, submesh,
+	        indexOffset, indexCount;  
+		  var boneSet;
+		  
+		  if(this.model._dirtyBones) {
+	            for(i = 0; i < this.model.bones.length; ++i) {
+	                var bone = this.model.bones[i];
+	          /*      bone.boneMat.flattenInto(this.acc);
+	                this.model.boneMatrices.set(this.acc, i * 16);
+	           */
+	                
+	                /* Use gl-matrix lib for debug purpose */
+	                this.model.boneMatrices.set(bone.boneMat, i * 16);
+	            }
+	        }
+		  
+		  
+		  for (i in this.model.meshes) {
+		        mesh = this.model.meshes[i];
+		        
+		        gl.activeTexture(gl.TEXTURE0);
+		        gl.bindTexture(gl.TEXTURE_2D, mesh.diffuse);
+		        gl.uniform1i(this.shaderProgramActive.samplerUniform1, 0);
+		        
+		        
+		        for (j in mesh.submeshes) {
+		            submesh = mesh.submeshes[j];
+		            boneSet = this.model.boneMatrices.subarray(submesh.boneOffset * 16, (submesh.boneOffset + submesh.boneCount) * 16);
+	                gl.uniformMatrix4fv(this.shaderProgramActive.boneMat, false, boneSet);
+		            gl.drawElements(gl.TRIANGLES, submesh.indexCount, gl.UNSIGNED_SHORT, submesh.indexOffset*2);
+		        }
+		    }
+	  }
+
+	  if (this.isAdditive)
+	  {
+	    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+	    gl.disable(gl.BLEND);
+	    gl.depthMask(true);
+	  }
+   
+};
+
+
 
 
 ModelRenderable.prototype.setMatrixUniforms = function(isPick){

@@ -100,7 +100,7 @@ ModelDemo.prototype.createObjects = function()
 //  canvas.addEventListener('mouseout', delegateParam(this, this.handleMouseOut), false);
 //  canvas.onmousedown = delegateParam(this, this.handleMouseDown);
 //  canvas.onmouseup = delegateParam(this, this.handleMouseUp);
-  this.mouse = new Mouse(canvas);
+  this.mouse = new Mouse(canvas, this);
   // consumers ----------------------------------------------------------------
   //Consumer(name, id, location, peak)
   this.consumers = new Array();
@@ -214,7 +214,7 @@ ModelDemo.prototype.createObjects = function()
   
   this.model1.program = this.objectShader;
   
-  this.model1.loadmodel("model/vat","modelvs-1","modelps-1");
+  this.model1.loadmodel("model/vat");
   
   this.modelRenderer = new ModelRenderable(this.model1,this,'model1');
   this.modelRenderer.shaderProgram = this.objectShader;
@@ -470,7 +470,7 @@ ModelDemo.prototype.updateTexture = function(consumer, time)
   var text2 = "Energy: " + (consumer.consumption/1000).toFixed(1) + " kWh";
   var text3 = "Peak: " + consumer.peak + " W";
 
-  var textureCanvas = document.getElementById('textureCanvas')
+  var textureCanvas = document.getElementById('textureCanvas');
   var ctx = textureCanvas.getContext('2d');  
 
   ctx.save();
@@ -542,7 +542,7 @@ ModelDemo.prototype.update = function(time)
 	   this.keycode = 8;    
    var pitch = this.mouse.mouseDX() / 500;
    var yAngle = this.mouse.mouseDY() / 500;	
-   console.log("currently pitch yAngle send to camera:" + pitch + "::"+yAngle);
+//   console.log("currently pitch yAngle send to camera:" + pitch + "::"+yAngle);
   var camera = this.camera;
 //  camera.eye = $V([Math.sin(time*0.0005) * 100, 100, Math.cos(time*0.0005) * 100 + 35]);
 //  this.camera.eye = $V([10 + Math.cos(this.rotY * 0.005) * Math.sin(this.rotX * 0.005) * this.distance, 1 + Math.sin(this.rotY * 0.005) * this.distance, -4.5 + Math.cos(this.rotY * 0.005) * Math.cos(this.rotX * 0.005) * this.distance]);

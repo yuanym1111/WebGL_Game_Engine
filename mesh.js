@@ -10,11 +10,14 @@ function Mesh()
   this.texCoordBuffer = null;
   this.texCoordUVWBuffer = null;
   this.indexBuffer = null;
+  this.boundingbox = null;
   this.canBeRendered = false;
   this.partialRender = false;
+  this.raypickable = false;
   this.partialRenderSize = 0;
   this.worldMatrix = Matrix.I(4);
 
+  
   this.createVertexBuffer = function(vertices, numItems, isDynamic)
   {
     this.vertexBuffer = gl.createBuffer();
@@ -22,6 +25,59 @@ function Mesh()
     gl.bufferData(gl.ARRAY_BUFFER, vertices, (isDynamic==true) ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
     this.vertexBuffer.itemSize = 3;
     this.vertexBuffer.numItems = numItems;
+    
+    if(this.raypickable){
+    	this.boundingbox = new AABBBox();
+    
+        for(var i = 0; i<this.vertexBuffer.numItems; i++){
+    	//check min/max for bounding box with x, y ,z elements
+    	  if(vertices[3*i] < this.boundingbox.min.e(1))
+    		this.boundingbox.min.elements[0] = vertices[3*i];
+    	  if(vertices[3*i] > this.boundingbox.max.e(1))
+    		this.boundingbox.max.elements[0] = vertices[3*i];
+    	
+    	  if(vertices[3*i + 1] < this.boundingbox.min.e(2))
+    		this.boundingbox.min.elements[1] = vertices[3*i + 1];
+    	  if(vertices[3*i + 1] > this.boundingbox.max.e(1))
+    		this.boundingbox.max.elements[1] = vertices[3*i + 1];
+    	
+    	  if(vertices[3*i + 2] < this.boundingbox.min.e(3))
+    		this.boundingbox.min.elements[2] = vertices[3*i + 2];
+    	  if(vertices[3*i + 2] > this.boundingbox.max.e(3))
+    		this.boundingbox.max.elements[2] = vertices[3*i + 2];
+    	
+        }
+    }
+  }
+  
+this.getBoungindgBox = function(vertices, worldMax){
+	  
+	  
+	  this.boundingbox = new AABBBox();
+	  
+	  var worldLoc;
+	  
+	  for(var i = 0; i<this.vertexBuffer.numItems; i++){
+	    	//check min/max for bounding box with x, y ,z elements
+		    
+		  worldLoc = worldMax.x($V([vertices[3*i],vertices[3*i + 1],vertices[3*i + 2]]));
+		  
+	    	if(vertices[3*i] < this.boundingbox.min.e(1))
+	    		this.boundingbox.min.elements[0] = vertices[3*i];
+	    	if(vertices[3*i] > this.boundingbox.max.e(1))
+	    		this.boundingbox.max.elements[0] = vertices[3*i];
+	    	
+	    	if(vertices[3*i + 1] < this.boundingbox.min.e(2))
+	    		this.boundingbox.min.elements[1] = vertices[3*i + 1];
+	    	if(vertices[3*i + 1] > this.boundingbox.max.e(1))
+	    		this.boundingbox.max.elements[1] = vertices[3*i + 1];
+	    	
+	    	if(vertices[3*i + 2] < this.boundingbox.min.e(3))
+	    		this.boundingbox.min.elements[2] = vertices[3*i + 2];
+	    	if(vertices[3*i + 2] > this.boundingbox.max.e(3))
+	    		this.boundingbox.max.elements[2] = vertices[3*i + 2];
+	    	
+	  }
   }
 
   this.updateVertexBuffer = function(vertices)
@@ -584,3 +640,24 @@ Torus.prototype.init = function(x,y, rinner, router, uscale, vscale)
   this.createIndexBuffer(this.indices, this.numFaces * 3);
 }
 
+
+//Struct for ray trace testing
+
+function AABBBox(max,min){
+	
+	this.max = max ? max : $V([-10000.0,-10000.0,-10000.0]);
+	this.min = min ? min : $V([10000.0,10000.0,10000.0]);
+	
+}
+
+AABBBox.prototype.setMax = function(max){
+	this.max = max;
+}
+
+AABBBox.prototype.setMin = function(min){
+	this.min = min;
+}
+
+AABBBox.prototype.drawBox = function(){
+	
+}

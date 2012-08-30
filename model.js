@@ -27,6 +27,8 @@ var Model = function () {
         this.vertexBuffer = null;
         this.indexBuffer = null;
         this.effect = null;
+        this.raypickable = false;
+        this.boundingbox = null;
         
         //Removed later, test it
         this.program = null;
@@ -40,7 +42,7 @@ var Model = function () {
 };  
 
 
-Model.prototype.loadmodel = function (url,vsname,fsname,callback){
+Model.prototype.loadmodel = function (url,callback){
 	      var self = this,
         vertComplete = false,
         modelComplete = false;
@@ -148,6 +150,36 @@ Model.prototype._compileBuffers = function (gl, arrays) {
         this.indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, arrays.indexArray, gl.STATIC_DRAW);
+        
+        //Also calculate the bounding box, it only can treat to move object, but later will implement the 
+        //function for rotate and scale
+        this.boundingbox = new AABBBox();
+        //How many uInt array it take for each vertex
+        var vertexintervel = this.vertexStride;
+        
+        for(var i = 0; i<arrays.vertexArray.length/this.vertexStride; i++){
+    	//check min/max for bounding box with x, y ,z elements
+        //Each element should be a float value which take up 4 uInt array
+          var x = bindataFloat([arrays.vertexArray[vertexintervel*i],arrays.vertexArray[vertexintervel*i + 1],arrays.vertexArray[vertexintervel*i + 2],arrays.vertexArray[vertexintervel*i + 3]]);	
+          var y = bindataFloat([arrays.vertexArray[vertexintervel*i + 4],arrays.vertexArray[vertexintervel*i + 5],arrays.vertexArray[vertexintervel*i + 6],arrays.vertexArray[vertexintervel*i + 7]]);	
+          var z = bindataFloat([arrays.vertexArray[vertexintervel*i + 8],arrays.vertexArray[vertexintervel*i + 9],arrays.vertexArray[vertexintervel*i + 10],arrays.vertexArray[vertexintervel*i + 11]]);	
+      		
+    	  if(x < this.boundingbox.min.e(1))
+    		this.boundingbox.min.elements[0] = x;
+    	  if(x > this.boundingbox.max.e(1))
+    		this.boundingbox.max.elements[0] = x;
+    	
+    	  if(y < this.boundingbox.min.e(2))
+    		this.boundingbox.min.elements[1] = y;
+    	  if(y > this.boundingbox.max.e(2))
+    		this.boundingbox.max.elements[1] = y;
+    	
+    	  if(z < this.boundingbox.min.e(3))
+    		this.boundingbox.min.elements[2] = z;
+    	  if(z > this.boundingbox.max.e(3))
+    		this.boundingbox.max.elements[2] = z;
+    	
+        }
 };
 
 Model.prototype._parseModel = function (model) {
