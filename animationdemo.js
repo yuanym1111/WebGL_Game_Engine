@@ -1,23 +1,3 @@
-
-function OfficeObject(name, refname, scale, rotate, pos, renderIndex)
-{
-  this.name = name;
-  this.refname = refname;
-  this.scale = scale;
-  this.rotate = rotate;
-  this.pos = pos;
-  this.renderIndex = renderIndex;
-}
-
-function Consumer(name, id, location, peak)
-{
-  this.name = name;
-  this.id = id;
-  this.location = location;
-  this.consumption = 0.0;
-  this.peak = peak;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 function AnimationDemo() {}
